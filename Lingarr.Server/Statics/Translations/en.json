@@ -32,12 +32,16 @@
     "title": "Title",
     "subtitles": "Subtitles",
     "exclude": "Exclude",
+    "include": "Include",
+    "includeAll": "Include All",
     "ageThreshold": "Delay",
     "hours": "hours"
   },
   "tvShows": {
     "title": "Title",
     "exclude": "Exclude",
+    "include": "Include",
+    "includeAll": "Include All",
     "season": "Season",
     "episodes": "Episodes",
     "episodesLine": "episodes",

@@ -59,6 +59,7 @@
     "status": "Status",
     "progress": "Progress",
     "completed": "Completed",
+    "error": "Error",
     "cancel": "Cancel",
     "delete": "Delete",
     "select": "Select"

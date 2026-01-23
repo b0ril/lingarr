@@ -13,7 +13,7 @@ export interface IShow extends IBaseEntity {
     dateAdded?: Date | null
     images: IImage[]
     seasons: ISeason[]
-    excludeFromTranslation: string
+    excludeFromTranslation: boolean
     translationAgeThreshold: string
 }
 
@@ -25,7 +25,7 @@ export interface IMovie extends IBaseEntity {
     dateAdded?: Date | null
     images: IImage[]
     subtitles?: ISubtitle[]
-    excludeFromTranslation: string
+    excludeFromTranslation: boolean
     translationAgeThreshold: string
 }
 
@@ -69,7 +69,7 @@ export interface ISeason extends IBaseEntity {
     episodes: IEpisode[]
     showId: number
     show: IShow
-    excludeFromTranslation: string
+    excludeFromTranslation: boolean
 }
 
 export interface IEpisode extends IBaseEntity {
@@ -80,7 +80,7 @@ export interface IEpisode extends IBaseEntity {
     path?: string | null
     seasonId: number
     season: ISeason
-    excludeFromTranslation: string
+    excludeFromTranslation: boolean
 }
 
 export interface IPagedResult<T> {
@@ -88,6 +88,8 @@ export interface IPagedResult<T> {
     totalCount: number
     pageNumber: number
     pageSize: number
+    includedCount?: number
+    excludedCount?: number
 }
 
 export const MEDIA_TYPE = {

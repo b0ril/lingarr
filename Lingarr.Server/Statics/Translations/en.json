@@ -86,6 +86,7 @@
     "sortByAdded": "Sort by Added",
     "sortByCompleted": "Sort by Completed",
     "sortByTitle": "Sort by Title",
+    "sortByIncluded": "Sort by Included",
     "statusInProgress": "In Progress",
     "statusPending": "Pending",
     "statusCompleted": "Completed",

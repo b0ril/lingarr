@@ -61,6 +61,7 @@ export const useTranslationRequestStore = defineStore('translateRequest', {
         },
         async cancel(translationRequest: ITranslationRequest) {
             await services.translationRequest.cancel<string>(translationRequest)
+            await this.getActiveCount()
         },
         async remove(translationRequest: ITranslationRequest) {
             await services.translationRequest.remove<string>(translationRequest).finally(() => {
@@ -68,6 +69,7 @@ export const useTranslationRequestStore = defineStore('translateRequest', {
                     (request) => request.id !== translationRequest.id
                 )
             })
+            await this.getActiveCount()
         },
         async retry(translationRequest: ITranslationRequest) {
             await services.translationRequest.retry<string>(translationRequest)

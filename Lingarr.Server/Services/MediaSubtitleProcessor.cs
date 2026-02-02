@@ -108,7 +108,7 @@ public class MediaSubtitleProcessor : IMediaSubtitleProcessor
             {
                 // Get languages that don't yet exist to validate whether captions in those languages are available
                 var languagesToTranslate = targetLanguages.Except(existingLanguages);
-                if (ignoreCaptions == "true")
+                if (ignoreCaptions == "false")
                 {
                     var targetLanguagesWithCaptions = subtitles
                         .Where(s => targetLanguages.Contains(s.Language) && !string.IsNullOrEmpty(s.Caption))

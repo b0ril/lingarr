@@ -42,6 +42,7 @@ export interface ITranslationRequest {
     progress: number
     createdAt?: string | null
     completedAt?: string | null
+    errorMessage?: string | null
 }
 
 export interface IRequestProgress {

@@ -113,6 +113,11 @@
                         {{ translate('translations.status') }}:&nbsp;
                     </span>
                     <TranslationStatus :translation-status="item.status" />
+                    <div 
+                        v-if="item.status === TRANSLATION_STATUS.FAILED && item.errorMessage"
+                        class="text-error text-xs mt-1">
+                        {{ item.errorMessage }}
+                    </div>
                 </div>
                 <div
                     class="mb-2 flex items-center md:mb-0 md:px-4 md:py-2"

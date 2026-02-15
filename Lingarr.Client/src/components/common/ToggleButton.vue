@@ -6,10 +6,10 @@
         <button
             type="button"
             role="switch"
-            :aria-checked="modelValue.toString() === 'true'"
+            :aria-checked="isActive"
             :class="[
                 'relative inline-flex shrink-0 cursor-pointer items-center border border-accent transition-colors duration-200 ease-in-out',
-                modelValue.toString() === 'true' ? 'bg-accent/30' : '',
+                isActive ? 'bg-accent/30' : '',
                 size === 'small'
                     ? 'h-[1.17rem] w-[2.08rem] rounded-sm p-0.5'
                     : 'h-7 w-[3.125rem] rounded-md p-1'
@@ -20,7 +20,7 @@
                 :class="[
                     'pointer-events-none inline-block transform bg-accent shadow-sm ring-0 transition duration-200 ease-in-out',
                     size === 'small' ? 'h-[0.83rem] w-[0.83rem] rounded-sm' : 'h-5 w-5 rounded-md',
-                    modelValue.toString() === 'true'
+                    isActive
                         ? size === 'small'
                             ? 'translate-x-[0.83rem]'
                             : 'translate-x-5'
@@ -32,15 +32,24 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const {
     label,
     modelValue = 'false',
-    size = 'default'
+    size = 'default',
+    inverted = false
 } = defineProps<{
     label?: string
     modelValue?: string | boolean
     size?: 'default' | 'small'
+    inverted?: boolean
 }>()
+
+const isActive = computed(() => {
+    const val = modelValue.toString() === 'true'
+    return inverted ? !val : val
+})
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void
@@ -48,7 +57,8 @@ const emit = defineEmits<{
 }>()
 
 const toggle = () => {
-    emit('update:modelValue', modelValue === 'true' ? 'false' : 'true')
+    const current = modelValue.toString() === 'true'
+    emit('update:modelValue', current ? 'false' : 'true')
     emit('toggle:update')
 }
 </script>

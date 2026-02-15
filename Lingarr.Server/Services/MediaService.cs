@@ -318,6 +318,142 @@ public class MediaService : IMediaService
     }
     
     /// <inheritdoc />
+    public async Task<bool> SetInclude(
+        MediaType mediaType,
+        int id,
+        bool include)
+    {
+        var excludeValue = !include;
+        try
+        {
+            switch (mediaType)
+            {
+                case MediaType.Movie:
+                    var movieCount = await _dbContext.Movies
+                        .Where(m => m.Id == id)
+                        .ExecuteUpdateAsync(s => s.SetProperty(m => m.ExcludeFromTranslation, excludeValue));
+                    if (movieCount > 0) return true;
+                    break;
+
+                case MediaType.Show:
+                    var showCount = await _dbContext.Shows
+                        .Where(s => s.Id == id)
+                        .ExecuteUpdateAsync(s => s.SetProperty(sh => sh.ExcludeFromTranslation, excludeValue));
+                    if (showCount > 0) return true;
+                    break;
+
+                case MediaType.Season:
+                    var seasonCount = await _dbContext.Seasons
+                        .Where(s => s.Id == id)
+                        .ExecuteUpdateAsync(s => s.SetProperty(se => se.ExcludeFromTranslation, excludeValue));
+                    if (seasonCount > 0) return true;
+                    break;
+
+                case MediaType.Episode:
+                    var episodeCount = await _dbContext.Episodes
+                        .Where(e => e.Id == id)
+                        .ExecuteUpdateAsync(s => s.SetProperty(ep => ep.ExcludeFromTranslation, excludeValue));
+                    if (episodeCount > 0) return true;
+                    break;
+
+                default:
+                    _logger.LogWarning("Unsupported media type for SetInclude: {MediaType}", mediaType);
+                    return false;
+            }
+
+            _logger.LogWarning("Media item not found for SetInclude. Type: {MediaType}, Id: {Id}", mediaType, id);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting include for media item. Type: {MediaType}, Id: {Id}", mediaType, id);
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> SetIncludeAll(
+        MediaType mediaType,
+        bool include)
+    {
+        var excludeValue = !include;
+        try
+        {
+            switch (mediaType)
+            {
+                case MediaType.Movie:
+                    await _dbContext.Movies
+                        .ExecuteUpdateAsync(s => s.SetProperty(m => m.ExcludeFromTranslation, excludeValue));
+                    return true;
+
+                case MediaType.Show:
+                    // Update all shows
+                    await _dbContext.Shows
+                        .ExecuteUpdateAsync(s => s.SetProperty(sh => sh.ExcludeFromTranslation, excludeValue));
+                    
+                    // Cascade to all seasons that belong to existing shows
+                    var showIds = await _dbContext.Shows.Select(s => s.Id).ToListAsync();
+                    await _dbContext.Seasons
+                        .Where(s => showIds.Contains(s.ShowId))
+                        .ExecuteUpdateAsync(s => s.SetProperty(se => se.ExcludeFromTranslation, excludeValue));
+                    
+                    // Cascade to all episodes that belong to existing seasons
+                    var seasonIds = await _dbContext.Seasons
+                        .Where(s => showIds.Contains(s.ShowId))
+                        .Select(s => s.Id)
+                        .ToListAsync();
+                    await _dbContext.Episodes
+                        .Where(e => seasonIds.Contains(e.SeasonId))
+                        .ExecuteUpdateAsync(s => s.SetProperty(ep => ep.ExcludeFromTranslation, excludeValue));
+                    
+                    return true;
+
+                default:
+                    _logger.LogWarning("Unsupported media type for SetIncludeAll: {MediaType}. Use Movie or Show.", mediaType);
+                    return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting include all for media type: {MediaType}", mediaType);
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IncludeSummary> GetIncludeSummary(MediaType mediaType)
+    {
+        try
+        {
+            switch (mediaType)
+            {
+                case MediaType.Movie:
+                    return new IncludeSummary
+                    {
+                        Included = await _dbContext.Movies.CountAsync(m => !m.ExcludeFromTranslation),
+                        Total = await _dbContext.Movies.CountAsync()
+                    };
+
+                case MediaType.Show:
+                    return new IncludeSummary
+                    {
+                        Included = await _dbContext.Shows.CountAsync(s => !s.ExcludeFromTranslation),
+                        Total = await _dbContext.Shows.CountAsync()
+                    };
+
+                default:
+                    _logger.LogWarning("Unsupported media type for GetIncludeSummary: {MediaType}", mediaType);
+                    return new IncludeSummary { Included = 0, Total = 0 };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting include summary for media type: {MediaType}", mediaType);
+            return new IncludeSummary { Included = 0, Total = 0 };
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<bool> Threshold(
         MediaType mediaType,
         int id,

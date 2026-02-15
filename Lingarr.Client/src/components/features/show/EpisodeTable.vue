@@ -45,7 +45,7 @@
                                 showStore.include(
                                     MEDIA_TYPE.EPISODE,
                                     episode.id,
-                                    String(episode.excludeFromTranslation) !== 'true'
+                                    !episode.excludeFromTranslation
                                 )
                         " />
                 </div>

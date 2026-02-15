@@ -102,7 +102,7 @@
                                     movieStore.include(
                                         MEDIA_TYPE.MOVIE,
                                         item.id,
-                                        String(item.excludeFromTranslation) !== 'true'
+                                        !item.excludeFromTranslation
                                     )
                             " />
                     </div>

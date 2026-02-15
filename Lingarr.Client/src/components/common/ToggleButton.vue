@@ -52,13 +52,14 @@ const isActive = computed(() => {
 })
 
 const emit = defineEmits<{
-    (e: 'update:modelValue', value: string): void
+    (e: 'update:modelValue', value: string | boolean): void
     (e: 'toggle:update'): void
 }>()
 
 const toggle = () => {
     const current = modelValue.toString() === 'true'
-    emit('update:modelValue', current ? 'false' : 'true')
+    const newValue = current ? false : true
+    emit('update:modelValue', typeof modelValue === 'boolean' ? newValue : String(newValue))
     emit('toggle:update')
 }
 </script>

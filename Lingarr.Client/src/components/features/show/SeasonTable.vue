@@ -42,7 +42,7 @@
                                     showStore.include(
                                         MEDIA_TYPE.SEASON,
                                         season.id,
-                                        String(season.excludeFromTranslation) !== 'true'
+                                        !season.excludeFromTranslation
                                     )
                             " />
                     </span>

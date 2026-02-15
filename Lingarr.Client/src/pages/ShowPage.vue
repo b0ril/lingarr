@@ -91,7 +91,7 @@
                                     showStore.include(
                                         MEDIA_TYPE.SHOW,
                                         item.id,
-                                        String(item.excludeFromTranslation) !== 'true'
+                                        !item.excludeFromTranslation
                                     )
                             " />
                     </div>

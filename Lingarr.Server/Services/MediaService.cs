@@ -382,30 +382,35 @@ public class MediaService : IMediaService
             switch (mediaType)
             {
                 case MediaType.Movie:
-                    await _dbContext.Movies
-                        .ExecuteUpdateAsync(s => s.SetProperty(m => m.ExcludeFromTranslation, excludeValue));
+                    await using (var movieTransaction = await _dbContext.Database.BeginTransactionAsync())
+                    {
+                        await _dbContext.Movies
+                            .ExecuteUpdateAsync(s => s.SetProperty(m => m.ExcludeFromTranslation, excludeValue));
+                        await movieTransaction.CommitAsync();
+                    }
                     return true;
 
                 case MediaType.Show:
-                    // Update all shows
-                    await _dbContext.Shows
-                        .ExecuteUpdateAsync(s => s.SetProperty(sh => sh.ExcludeFromTranslation, excludeValue));
-                    
-                    // Cascade to all seasons that belong to existing shows
-                    var showIds = await _dbContext.Shows.Select(s => s.Id).ToListAsync();
-                    await _dbContext.Seasons
-                        .Where(s => showIds.Contains(s.ShowId))
-                        .ExecuteUpdateAsync(s => s.SetProperty(se => se.ExcludeFromTranslation, excludeValue));
-                    
-                    // Cascade to all episodes that belong to existing seasons
-                    var seasonIds = await _dbContext.Seasons
-                        .Where(s => showIds.Contains(s.ShowId))
-                        .Select(s => s.Id)
-                        .ToListAsync();
-                    await _dbContext.Episodes
-                        .Where(e => seasonIds.Contains(e.SeasonId))
-                        .ExecuteUpdateAsync(s => s.SetProperty(ep => ep.ExcludeFromTranslation, excludeValue));
-                    
+                    await using (var showTransaction = await _dbContext.Database.BeginTransactionAsync())
+                    {
+                        // Update all shows
+                        await _dbContext.Shows
+                            .ExecuteUpdateAsync(s => s.SetProperty(sh => sh.ExcludeFromTranslation, excludeValue));
+
+                        // Cascade to all seasons that belong to existing shows, without materializing IDs
+                        await _dbContext.Seasons
+                            .Where(se => _dbContext.Shows.Any(sh => sh.Id == se.ShowId))
+                            .ExecuteUpdateAsync(s => s.SetProperty(se => se.ExcludeFromTranslation, excludeValue));
+
+                        // Cascade to all episodes that belong to seasons of existing shows, without materializing IDs
+                        await _dbContext.Episodes
+                            .Where(ep => _dbContext.Seasons
+                                .Any(se => se.Id == ep.SeasonId &&
+                                           _dbContext.Shows.Any(sh => sh.Id == se.ShowId)))
+                            .ExecuteUpdateAsync(s => s.SetProperty(ep => ep.ExcludeFromTranslation, excludeValue));
+
+                        await showTransaction.CommitAsync();
+                    }
                     return true;
 
                 default:
@@ -428,18 +433,40 @@ public class MediaService : IMediaService
             switch (mediaType)
             {
                 case MediaType.Movie:
+                {
+                    var movieCounts = await _dbContext.Movies
+                        .GroupBy(m => 1)
+                        .Select(g => new
+                        {
+                            Included = g.Count(m => !m.ExcludeFromTranslation),
+                            Total = g.Count()
+                        })
+                        .FirstOrDefaultAsync();
+
                     return new IncludeSummary
                     {
-                        Included = await _dbContext.Movies.CountAsync(m => !m.ExcludeFromTranslation),
-                        Total = await _dbContext.Movies.CountAsync()
+                        Included = movieCounts?.Included ?? 0,
+                        Total = movieCounts?.Total ?? 0
                     };
+                }
 
                 case MediaType.Show:
+                {
+                    var showCounts = await _dbContext.Shows
+                        .GroupBy(s => 1)
+                        .Select(g => new
+                        {
+                            Included = g.Count(s => !s.ExcludeFromTranslation),
+                            Total = g.Count()
+                        })
+                        .FirstOrDefaultAsync();
+
                     return new IncludeSummary
                     {
-                        Included = await _dbContext.Shows.CountAsync(s => !s.ExcludeFromTranslation),
-                        Total = await _dbContext.Shows.CountAsync()
+                        Included = showCounts?.Included ?? 0,
+                        Total = showCounts?.Total ?? 0
                     };
+                }
 
                 default:
                     _logger.LogWarning("Unsupported media type for GetIncludeSummary: {MediaType}", mediaType);

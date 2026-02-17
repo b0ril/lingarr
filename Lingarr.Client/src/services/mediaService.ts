@@ -1,5 +1,5 @@
 import { AxiosError, AxiosResponse, AxiosStatic } from 'axios'
-import { IMediaService, MediaType } from '@/ts'
+import { IMediaService, IIncludeSummary, MediaType } from '@/ts'
 
 const service = (http: AxiosStatic, resource = '/api/media'): IMediaService => ({
     movies<T>(
